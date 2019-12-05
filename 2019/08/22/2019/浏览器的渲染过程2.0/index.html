@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang=zh>
+<head>
+    <!-- so meta -->
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="HandheldFriendly" content="True">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+    <meta name="description" content="上一篇文章： 《浏览器的渲染机制》里，大概介绍了浏览器从下载完第一份document文件，到渲染出整个页面所发生的事情（也称作： 关键路径渲染 ），其中包括：1、构建对象模型（DOM，CSSOM），2、构建渲染树（RenderTree），3、布局，4、渲染。 这一篇文章我们将参考chrome浏览器的内核WebKit， 详细介绍下浏览器呈现引擎的一些概念和渲染中的一个关键环节：Composite（渲">
+<meta name="keywords" content="js,浏览器">
+<meta property="og:type" content="article">
+<meta property="og:title" content="浏览器的渲染过程2.0 — Composite">
+<meta property="og:url" content="http:&#x2F;&#x2F;yoursite.com&#x2F;2019&#x2F;08&#x2F;22&#x2F;2019&#x2F;%E6%B5%8F%E8%A7%88%E5%99%A8%E7%9A%84%E6%B8%B2%E6%9F%93%E8%BF%87%E7%A8%8B2.0&#x2F;index.html">
+<meta property="og:site_name" content="阿汤哥的鼎出品">
+<meta property="og:description" content="上一篇文章： 《浏览器的渲染机制》里，大概介绍了浏览器从下载完第一份document文件，到渲染出整个页面所发生的事情（也称作： 关键路径渲染 ），其中包括：1、构建对象模型（DOM，CSSOM），2、构建渲染树（RenderTree），3、布局，4、渲染。 这一篇文章我们将参考chrome浏览器的内核WebKit， 详细介绍下浏览器呈现引擎的一些概念和渲染中的一个关键环节：Composite（渲">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="https:&#x2F;&#x2F;user-images.githubusercontent.com&#x2F;18004081&#x2F;63517163-05002900-c521-11e9-9a77-650928e74fa9.png">
+<meta property="og:image" content="https:&#x2F;&#x2F;user-images.githubusercontent.com&#x2F;18004081&#x2F;63517233-2eb95000-c521-11e9-94d9-d8e3e42eed24.png">
+<meta property="og:image" content="https:&#x2F;&#x2F;user-images.githubusercontent.com&#x2F;18004081&#x2F;63517276-4395e380-c521-11e9-934e-458fe87bbfa4.png">
+<meta property="og:image" content="https:&#x2F;&#x2F;user-images.githubusercontent.com&#x2F;18004081&#x2F;63517276-4395e380-c521-11e9-934e-458fe87bbfa4.png">
+<meta property="og:image" content="https:&#x2F;&#x2F;user-images.githubusercontent.com&#x2F;18004081&#x2F;63517342-67592980-c521-11e9-9aa0-5e001e9a2b87.png">
+<meta property="og:image" content="https:&#x2F;&#x2F;user-images.githubusercontent.com&#x2F;18004081&#x2F;63517370-7344eb80-c521-11e9-812e-556e3e3ca255.png">
+<meta property="og:image" content="https:&#x2F;&#x2F;user-images.githubusercontent.com&#x2F;18004081&#x2F;50632777-f8c05f00-0f83-11e9-9f76-7c91bbb480fa.png">
+<meta property="og:image" content="https:&#x2F;&#x2F;user-images.githubusercontent.com&#x2F;18004081&#x2F;63517396-80fa7100-c521-11e9-8fa0-1788371f3c24.png">
+<meta property="og:image" content="https:&#x2F;&#x2F;user-images.githubusercontent.com&#x2F;18004081&#x2F;63517459-9d96a900-c521-11e9-91f0-d465f7c628da.png">
+<meta property="og:image" content="https:&#x2F;&#x2F;user-images.githubusercontent.com&#x2F;18004081&#x2F;63517483-a8e9d480-c521-11e9-8298-05884ed42471.png">
+<meta property="og:image" content="https:&#x2F;&#x2F;user-images.githubusercontent.com&#x2F;18004081&#x2F;63517573-ca4ac080-c521-11e9-92b3-3906e4c12b37.png">
+<meta property="og:updated_time" content="2019-12-05T11:40:56.252Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https:&#x2F;&#x2F;user-images.githubusercontent.com&#x2F;18004081&#x2F;63517163-05002900-c521-11e9-9a77-650928e74fa9.png">
+    
+    
+        
+          
+              <link rel="shortcut icon" href="/images/favicon.ico">
+          
+        
+        
+          
+            <link rel="icon" type="image/png" href="/images/favicon-192x192.png" sizes="192x192">
+          
+        
+        
+          
+            <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
+          
+        
+    
+    <!-- title -->
+    <title>浏览器的渲染过程2.0 — Composite</title>
+    <!-- styles -->
+    <link rel="stylesheet" href="/css/style.css">
+    <!-- rss -->
+    
+    
+</head>
+
+<body>
+    
+      <div id="header-post">
+  <a id="menu-icon" href="#" class="active"><i class="fa fa-bars fa-lg"></i></a>
+  <a id="menu-icon-tablet" href="#" class="active"><i class="fa fa-bars fa-lg"></i></a>
+  <a id="top-icon-tablet" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');" style="display:none;"><i class="fa fa-chevron-up fa-lg"></i></a>
+  <span id="menu" style="visibility: visible;">
+    <span id="nav">
+      <ul>
+         
+          <li><a href="/">Home</a></li>
+         
+          <li><a href="/about/index.html">About</a></li>
+         
+          <li><a href="/archives/">Writing</a></li>
+         
+          <li><a href="http://github.com/gabithume" target="_blank" rel="noopener">Travel</a></li>
+        
+      </ul>
+    </span>
+    <br/>
+    <span id="actions">
+      <ul>
+        
+        <li><a class="icon" href="/2019/09/17/2019/liunx%E6%9F%A5%E8%AF%A2%E6%97%A5%E5%BF%97%E5%B8%B8%E7%94%A8%E5%91%BD%E4%BB%A4%E6%94%B6%E9%9B%86/"><i class="fa fa-chevron-left" aria-hidden="true" onmouseover='$("#i-prev").toggle();' onmouseout='$("#i-prev").toggle();'></i></a></li>
+        
+        
+        <li><a class="icon" href="/2019/05/12/2019/%E5%8A%A8%E6%80%81%E8%A7%84%E5%88%92/"><i class="fa fa-chevron-right" aria-hidden="true" onmouseover='$("#i-next").toggle();' onmouseout='$("#i-next").toggle();'></i></a></li>
+        
+        <li><a class="icon" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fa fa-chevron-up" aria-hidden="true" onmouseover='$("#i-top").toggle();' onmouseout='$("#i-top").toggle();'></i></a></li>
+        <li><a class="icon" href="#"><i class="fa fa-share-alt" aria-hidden="true" onmouseover='$("#i-share").toggle();' onmouseout='$("#i-share").toggle();' onclick='$("#share").toggle();return false;'></i></a></li>
+      </ul>
+      <span id="i-prev" class="info" style="display:none;">Previous post</span>
+      <span id="i-next" class="info" style="display:none;">Next post</span>
+      <span id="i-top" class="info" style="display:none;">Back to top</span>
+      <span id="i-share" class="info" style="display:none;">Share post</span>
+    </span>
+    <br/>
+    <div id="share" style="display: none">
+      <ul>
+  <li><a class="icon" href="http://www.facebook.com/sharer.php?u=http://yoursite.com/2019/08/22/2019/%E6%B5%8F%E8%A7%88%E5%99%A8%E7%9A%84%E6%B8%B2%E6%9F%93%E8%BF%87%E7%A8%8B2.0/" target="_blank" rel="noopener"><i class="fa fa-facebook " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://twitter.com/share?url=http://yoursite.com/2019/08/22/2019/%E6%B5%8F%E8%A7%88%E5%99%A8%E7%9A%84%E6%B8%B2%E6%9F%93%E8%BF%87%E7%A8%8B2.0/&text=浏览器的渲染过程2.0 — Composite" target="_blank" rel="noopener"><i class="fa fa-twitter " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.linkedin.com/shareArticle?url=http://yoursite.com/2019/08/22/2019/%E6%B5%8F%E8%A7%88%E5%99%A8%E7%9A%84%E6%B8%B2%E6%9F%93%E8%BF%87%E7%A8%8B2.0/&title=浏览器的渲染过程2.0 — Composite" target="_blank" rel="noopener"><i class="fa fa-linkedin " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://pinterest.com/pin/create/bookmarklet/?url=http://yoursite.com/2019/08/22/2019/%E6%B5%8F%E8%A7%88%E5%99%A8%E7%9A%84%E6%B8%B2%E6%9F%93%E8%BF%87%E7%A8%8B2.0/&is_video=false&description=浏览器的渲染过程2.0 — Composite" target="_blank" rel="noopener"><i class="fa fa-pinterest " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=浏览器的渲染过程2.0 — Composite&body=Check out this article: http://yoursite.com/2019/08/22/2019/%E6%B5%8F%E8%A7%88%E5%99%A8%E7%9A%84%E6%B8%B2%E6%9F%93%E8%BF%87%E7%A8%8B2.0/"><i class="fa fa-envelope " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://getpocket.com/save?url=http://yoursite.com/2019/08/22/2019/%E6%B5%8F%E8%A7%88%E5%99%A8%E7%9A%84%E6%B8%B2%E6%9F%93%E8%BF%87%E7%A8%8B2.0/&title=浏览器的渲染过程2.0 — Composite" target="_blank" rel="noopener"><i class="fa fa-get-pocket " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://reddit.com/submit?url=http://yoursite.com/2019/08/22/2019/%E6%B5%8F%E8%A7%88%E5%99%A8%E7%9A%84%E6%B8%B2%E6%9F%93%E8%BF%87%E7%A8%8B2.0/&title=浏览器的渲染过程2.0 — Composite" target="_blank" rel="noopener"><i class="fa fa-reddit " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.stumbleupon.com/submit?url=http://yoursite.com/2019/08/22/2019/%E6%B5%8F%E8%A7%88%E5%99%A8%E7%9A%84%E6%B8%B2%E6%9F%93%E8%BF%87%E7%A8%8B2.0/&title=浏览器的渲染过程2.0 — Composite" target="_blank" rel="noopener"><i class="fa fa-stumbleupon " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://digg.com/submit?url=http://yoursite.com/2019/08/22/2019/%E6%B5%8F%E8%A7%88%E5%99%A8%E7%9A%84%E6%B8%B2%E6%9F%93%E8%BF%87%E7%A8%8B2.0/&title=浏览器的渲染过程2.0 — Composite" target="_blank" rel="noopener"><i class="fa fa-digg " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.tumblr.com/share/link?url=http://yoursite.com/2019/08/22/2019/%E6%B5%8F%E8%A7%88%E5%99%A8%E7%9A%84%E6%B8%B2%E6%9F%93%E8%BF%87%E7%A8%8B2.0/&name=浏览器的渲染过程2.0 — Composite&description=" target="_blank" rel="noopener"><i class="fa fa-tumblr " aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+    <div id="toc">
+      <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#浏览器的主要结构"><span class="toc-number">1.</span> <span class="toc-text">浏览器的主要结构</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#呈现引擎"><span class="toc-number">2.</span> <span class="toc-text">呈现引擎</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Compsite"><span class="toc-number">3.</span> <span class="toc-text">Compsite</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#RenderLayer-gt-GraphicsLayer，合成层的创建标准"><span class="toc-number">4.</span> <span class="toc-text">RenderLayer -&gt; GraphicsLayer，合成层的创建标准</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#合成层的性能优化"><span class="toc-number">5.</span> <span class="toc-text">合成层的性能优化</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#提升动画效果的元素"><span class="toc-number">5.0.1.</span> <span class="toc-text">提升动画效果的元素</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#使用-transform-或者-opacity-来实现动画效果"><span class="toc-number">5.0.2.</span> <span class="toc-text">使用 transform 或者 opacity 来实现动画效果</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#减少绘制区域"><span class="toc-number">5.0.3.</span> <span class="toc-text">减少绘制区域</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#如何查看合成层"><span class="toc-number">6.</span> <span class="toc-text">如何查看合成层</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#合成层可能会遇到的问题"><span class="toc-number">7.</span> <span class="toc-text">合成层可能会遇到的问题</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#参考资料"><span class="toc-number">8.</span> <span class="toc-text">参考资料</span></a></li></ol>
+    </div>
+  </span>
+</div>
+
+    
+    <div class="content index width mx-auto px2 my4">
+        
+        <article class="post" itemscope itemtype="http://schema.org/BlogPosting">
+  <header>
+    
+    <h1 class="posttitle" itemprop="name headline">
+        浏览器的渲染过程2.0 — Composite
+    </h1>
+
+
+
+    <div class="meta">
+      <span class="author" itemprop="author" itemscope itemtype="http://schema.org/Person">
+        <span itemprop="name">阿汤哥的鼎出品</span>
+      </span>
+      
+    <div class="postdate">
+        <time datetime="2019-08-21T16:00:00.000Z" itemprop="datePublished">2019-08-22</time>
+    </div>
+
+
+      
+    <div class="article-tag">
+        <i class="fa fa-tag"></i>
+        <a class="tag-link" href="/tags/js/" rel="tag">js</a>, <a class="tag-link" href="/tags/%E6%B5%8F%E8%A7%88%E5%99%A8/" rel="tag">浏览器</a>
+    </div>
+
+
+    </div>
+  </header>
+  
+
+  <div class="content" itemprop="articleBody">
+    <p>上一篇文章： <a href="/2019/01/03/浏览器的渲染过程/">《浏览器的渲染机制》</a>里，大概介绍了浏览器从下载完第一份document文件，到渲染出整个页面所发生的事情（也称作： <code>关键路径渲染</code> ），其中包括：1、构建对象模型（DOM，CSSOM），2、构建渲染树（RenderTree），3、布局，4、渲染。</p>
+<p>这一篇文章我们将参考chrome浏览器的内核WebKit， 详细介绍下浏览器呈现引擎的一些概念和渲染中的一个关键环节：<strong>Composite（渲染层合并）</strong>，它所做的事情和带来的效果。</p>
+<h2 id="浏览器的主要结构"><a href="#浏览器的主要结构" class="headerlink" title="浏览器的主要结构"></a>浏览器的主要结构</h2><p>市面上主流的几款浏览器，基本上都是由下面几个结构组成：</p>
+<p><img src="https://user-images.githubusercontent.com/18004081/63517163-05002900-c521-11e9-9a77-650928e74fa9.png" alt="浏览器的主要结构"></p>
+<ol>
+<li><strong>用户界面</strong> - 包括地址栏、前进/后退按钮、书签菜单等。除了浏览器主窗口显示的您请求的页面外，其他显示的各个部分都属于用户界面。</li>
+<li><strong>浏览器引擎</strong> - 在用户界面和呈现引擎之间传送指令。</li>
+<li><strong>呈现引擎</strong> - 负责显示请求的内容。如果请求的内容是 HTML，它就负责解析 HTML 和 CSS 内容，并将解析后的内容显示在屏幕上。</li>
+<li><strong>网络</strong> - 用于网络调用，比如 HTTP 请求。其接口与平台无关，并为所有平台提供底层实现。</li>
+<li><strong>用户界面后端</strong> - 用于绘制基本的窗口小部件，比如组合框和窗口。其公开了与平台无关的通用接口，而在底层使用操作系统的用户界面方法。</li>
+<li><strong>JavaScript 解释器</strong>。用于解析和执行 JavaScript 代码。</li>
+<li><strong>数据存储</strong>。这是持久层。浏览器需要在硬盘上保存各种数据，例如 Cookie。新的 HTML 规范 (HTML5) 定义了“网络数据库”，这是一个完整（但是轻便）的浏览器内数据库。</li>
+</ol>
+<p>其中值得注意的是，与其他浏览器不同的是：chrome浏览器中每个tab页对应一个呈现引擎实例，每个tab页都是一个单独的进程。</p>
+<h2 id="呈现引擎"><a href="#呈现引擎" class="headerlink" title="呈现引擎"></a>呈现引擎</h2><p>webkit的呈现引擎，官方提供的一张主流程图是：<br><img src="https://user-images.githubusercontent.com/18004081/63517233-2eb95000-c521-11e9-94d9-d8e3e42eed24.png" alt="webkit主流程"></p>
+<p>其中有些名词和 <a href="/2019/01/03/浏览器的渲染过程/">《浏览器的渲染机制》</a>里提到的不一样，比如：Style Rules，这是webkit自己引入的几个概念，这里先解释一下，方便大家理解：</p>
+<ul>
+<li><p><strong>DOM Tree</strong>：浏览器将HTML解析成树形的数据结构。</p>
+</li>
+<li><p><strong>Style Rules</strong>：浏览器将CSS解析成树形的数据结构，对应我们的CSSOM。</p>
+</li>
+<li><p><strong>Render Tree</strong>：DOM和CSSOM合并后生成Render Tree。</p>
+</li>
+<li><p><strong>layout</strong>： 布局。有了Render Tree，浏览器已经能知道网页中有哪些节点、各个节点的CSS定义以及他们的从              属关系，从而去计算出每个节点在屏幕中的位置。</p>
+</li>
+<li><p><strong>painting</strong>： 渲染。按照算出来的规则，通过显卡，把内容画到屏幕上。</p>
+</li>
+<li><p><strong>reflow（回流/重排）</strong>：当浏览器发现某个部分发生了点变化影响了布局，需要倒回去重新渲染，这个回退的过程叫 reflow。</p>
+<blockquote>
+<p>Dirty 位系统:<br>为了避免所有细小的更改都要从根节点进行整体布局，浏览器采用了一种“dirty 位”系统。如果某个RenderTree上的Node发生了更改，便将自身标注为“dirty”，表示需要进行布局。</p>
+<p>有两种标记：“dirty”和“children are dirty”。“children are dirty”表示尽管呈现器自身没有变化，但它至少有一个子代需要布局</p>
+<p>reflow时，浏览器会对Render Tree进行遍历，而仅仅只对标注了“dirty “的Node进行布局。 </p>
+</blockquote>
+</li>
+<li><p><strong>repaint（重绘）</strong>：改变某个元素的背景色、文字颜色、边框颜色等等不影响它周围或内部布局的属性时，屏幕的一部分要重画，但是元素的几何尺寸没有变。</p>
+</li>
+</ul>
+<p>上面的过程可以合并成：</p>
+<p><img src="https://user-images.githubusercontent.com/18004081/63517276-4395e380-c521-11e9-934e-458fe87bbfa4.png" alt="image"></p>
+<p>实际场景下，渲染流程可以分为下面三种，layout和point这个过程是可以避免的：</p>
+<ul>
+<li>正常情况：JS/CSS -&gt; 计算样式 -&gt; 布局 -&gt; 绘制 -&gt; 渲染层合并</li>
+</ul>
+<p><img src="https://user-images.githubusercontent.com/18004081/63517276-4395e380-c521-11e9-934e-458fe87bbfa4.png" alt="image"></p>
+<ul>
+<li>不需要重新布局（仅触发重绘）：JS/CSS -&gt; 布局 -&gt; 绘制 -&gt; 渲染层合并</li>
+</ul>
+<p><img src="https://user-images.githubusercontent.com/18004081/63517342-67592980-c521-11e9-9aa0-5e001e9a2b87.png" alt="image"></p>
+<ul>
+<li>既不需要重新布局，也不需要重新绘制（不触发回流）：JS/CSS -&gt; 布局 -&gt; 渲染层合并</li>
+</ul>
+<p><img src="https://user-images.githubusercontent.com/18004081/63517370-7344eb80-c521-11e9-812e-556e3e3ca255.png" alt="image"></p>
+<p>显而易见，第三种渲染流程浏览器的处理是最快的，那什么情况下的渲染是第三种情况呢，这里就不得不提到<strong>Compsite</strong>了</p>
+<h2 id="Compsite"><a href="#Compsite" class="headerlink" title="Compsite"></a>Compsite</h2><p><a href="/2019/01/03/浏览器的渲染过程/">上一篇</a>我们提到，浏览器渲染时，对渲染树有着一个RenderObject -&gt; RenderLayout的转换过程：</p>
+<p><img src="https://user-images.githubusercontent.com/18004081/50632777-f8c05f00-0f83-11e9-9f76-7c91bbb480fa.png" alt="1"></p>
+<p>实际上，Chrome拥有两套不同的渲染路径：硬件加速路径和旧软件路径。</p>
+<p>硬件加速路径会将一些图层的合成交给GPU处理，比CPU处理更快，而我们的RenderLayout（有些地方又称作PaintLayers）并不能作为GPU的输入，这里会将RenderLayout再转换成GraphicsLayers：<br><img src="https://user-images.githubusercontent.com/18004081/63517396-80fa7100-c521-11e9-8fa0-1788371f3c24.png" alt="image"></p>
+<blockquote>
+<p>某些特殊的RenderLayout会被认为是合成层（Compositing Layers），合成层拥有单独的 GraphicsLayer，而其他不是合成层的渲染层，则和其第一个拥有 GraphicsLayer 父层公用一个。</p>
+<p>而每个GraphicsLayer（合成层单独拥有的图层） 都有一个 GraphicsContext，GraphicsContext 会负责输出该层的位图，位图是存储在共享内存中，作为纹理上传到 GPU 中，最后由 GPU 将多个位图进行合成，然后显示到屏幕上。</p>
+</blockquote>
+<p>很绕口对不对=  =，人性话来说，与RenderObject转换成RenderLayer一样，浏览器也是根据“某些规则”，选中一些特殊的RenderLayout节点（天选之子），这些节点将被称为Compositing Layers，Compositing Layers与其他的普通节点不一样的是他们拥有自己的GraphicsLayer，而那些没有被选中的节点，会和父层公用一个GraphicsLayer。</p>
+<p>每个GraphicsLayer都拥有GraphicsContext，GraphicsContext输出的位图会作为纹理上传到GPU中。</p>
+<p>什么是纹理？可以把它想象成一个从主存储器(例如 RAM)移动到图像存储器(例如 GPU 中的 VRAM)的位图图像(bitmapimage)</p>
+<p>Chrome 使用纹理来从 GPU上获得大块的页面内容。通过将纹理应用到一个非常简单的矩形网格就能很容易匹配不同的位置(position)和变形(transformation)。这也就是3DCSS 的工作原理，它对于快速滚动也十分有效。</p>
+<h2 id="RenderLayer-gt-GraphicsLayer，合成层的创建标准"><a href="#RenderLayer-gt-GraphicsLayer，合成层的创建标准" class="headerlink" title="RenderLayer -&gt; GraphicsLayer，合成层的创建标准"></a>RenderLayer -&gt; GraphicsLayer，合成层的创建标准</h2><p>什么情况下能使元素获得自己的层？虽然 Chrome的启发式方法(heuristic)随着时间在不断发展进步，但是从目前来说，满足以下任意情况便会创建层：</p>
+<ul>
+<li>直接原因（direct reason）<ul>
+<li>硬件加速的 iframe 元素（比如 iframe 嵌入的页面中有合成层）</li>
+<li>video 元素</li>
+<li>覆盖在 video 元素上的视频控制栏</li>
+<li>3D 或者 硬件加速的 2D Canvas 元素</li>
+<li>硬件加速的插件，比如 flash 等等</li>
+<li>在 DPI 较高的屏幕上，fix 定位的元素会自动地被提升到合成层中。但在 DPI 较低的设备上却并非如此，因为这个渲染层的提升会使得字体渲染方式由子像素变为灰阶</li>
+<li>有 3D transform</li>
+<li>backface-visibility 为 hidden</li>
+<li>对 opacity、transform、fliter、backdropfilter 应用了 animation 或者 transition（需要是 active 的 animation 或者 transition，当 animation 或者 transition 效果未开始或结束后，提升合成层也会失效）</li>
+<li>will-change 设置为 opacity、transform、top、left、bottom、right（其中 top、left 等需要设置明确的定位属性，如 relative 等）</li>
+</ul>
+</li>
+<li>后代元素原因<ul>
+<li>有合成层后代同时本身有 transform、opactiy（小于 1）、mask、fliter、reflection 属性 </li>
+<li>有合成层后代同时本身 overflow 不为 visible（如果本身是因为明确的定位因素产生的 SelfPaintingLayer，则需要 z-index 不为 auto）</li>
+<li>有合成层后代同时本身 fixed 定位 </li>
+<li>有 3D transfrom 的合成层后代同时本身有 preserves-3d 属性 </li>
+<li>有 3D transfrom 的合成层后代同时本身有 perspective</li>
+</ul>
+</li>
+<li>overlap 重叠原因，元素有一个z-index较低且包含一个复合层的兄弟元素（换句话说就是该元素在复合层上面渲染）</li>
+</ul>
+<h2 id="合成层的性能优化"><a href="#合成层的性能优化" class="headerlink" title="合成层的性能优化"></a>合成层的性能优化</h2><p>对于提升为合成层有以下几个好处：</p>
+<ul>
+<li>合成层的位图，会交由 GPU 合成，比 CPU 处理要快</li>
+<li>当需要 repaint 时，只需要 repaint 本身，不会影响到其他的层</li>
+<li>对于 transform 和 </li>
+<li>\ 效果，不会触发 layout 和 paint <em>（当当当，这里就是第三种渲染模式的场景）</em></li>
+</ul>
+<p><strong>注意：</strong></p>
+<ul>
+<li>提升到合成层后合成层的位图会交GPU处理，但请注意，仅仅只是合成的处理（把绘图上下文的位图输出进行组合）需要用到GPU，生成合成层的位图处理（绘图上下文的工作）是需要CPU。</li>
+<li>当需要repaint的时候可以只repaint本身，不影响其他层，但是paint之前还有style， layout,那就意味着即使合成层只是repaint了自己，但style和layout本身就很占用时间。</li>
+<li>仅仅是transform和opacity不会引发layout 和paint，那么其他的属性不确定。</li>
+</ul>
+<p>总结来说，一般一个元素开启硬件加速后会变成合成层，可以独立于普通文档流中，改动后可以避免整个页面重绘，提升性能。</p>
+<p>那么针对上面这些特点，可以做的性能优化有：</p>
+<h4 id="提升动画效果的元素"><a href="#提升动画效果的元素" class="headerlink" title="提升动画效果的元素"></a><strong>提升动画效果的元素</strong></h4><p>合成层的好处是不会影响到其他元素的绘制，因此，为了减少动画元素对其他元素的影响，从而减少paint，我们需要把动画效果中的元素提升为合成层。 </p>
+<p>提升合成层的最好方式是使用 CSS 的<code>will-change</code>属性。从上一节合成层产生原因中，可以知道 will-change 设置为<code>opacity、transform、top、left、bottom、right</code> 可以将元素提升为合成层。对于不支持will-change的浏览器版本，可以加上transform属性，比如：<code>transform: translateZ(0)</code></p>
+<h4 id="使用-transform-或者-opacity-来实现动画效果"><a href="#使用-transform-或者-opacity-来实现动画效果" class="headerlink" title="使用 transform 或者 opacity 来实现动画效果"></a><strong>使用 transform 或者 opacity 来实现动画效果</strong></h4><p>上文提到transform和opaciry属性不会引发layout和paint，值得注意的是，只有元素提升到合成层后才不会引发，普通元素修改transform和opacity还是会引发的。</p>
+<h4 id="减少绘制区域"><a href="#减少绘制区域" class="headerlink" title="减少绘制区域"></a><strong>减少绘制区域</strong></h4><p>对于不需要重新绘制的区域应尽量避免绘制。</p>
+<p>比如一个 fix 在页面顶部的固定不变的导航header，当页面内容某个区域 repaint 时，在没有提升为合成层时，整个屏幕包括 fix 的 header 也会被重绘。而对于固定不变的区域，我们期望其并不会被重绘，因此可以通过之前的方法，将其提升为独立的合成层。</p>
+<h2 id="如何查看合成层"><a href="#如何查看合成层" class="headerlink" title="如何查看合成层"></a>如何查看合成层</h2><p><strong>Chrome DevTools -&gt; Rendering -&gt; Layer borders</strong><br><img src="https://user-images.githubusercontent.com/18004081/63517459-9d96a900-c521-11e9-91f0-d465f7c628da.png" alt="image"></p>
+<p>  然后页面的合成层会用黄色的边框框出来<br><img src="https://user-images.githubusercontent.com/18004081/63517483-a8e9d480-c521-11e9-8298-05884ed42471.png" alt="image"></p>
+<p><strong>Chrome DevTools -&gt; Layers</strong></p>
+<p>  左边会详细列出页面的所有合成层，点击时会将这个合成层在页面的具体位置显示出来。下面的Details和Profiler会显示这个合成层的详细信息（大小，加载时间等…）<br>  <img src="https://user-images.githubusercontent.com/18004081/63517573-ca4ac080-c521-11e9-92b3-3906e4c12b37.png" alt="image"></p>
+<h2 id="合成层可能会遇到的问题"><a href="#合成层可能会遇到的问题" class="headerlink" title="合成层可能会遇到的问题"></a>合成层可能会遇到的问题</h2><p>由于合成层本身是占用内存的，当浏览器出现大量无法被压缩的合成层时（层爆炸），会导致内存紧张，GPU资源过度消耗等问题，具体可参考<a href="https://div.io/topic/1348" target="_blank" rel="noopener">CSS3硬件加速也有坑！！！</a>,这篇文章写的。</p>
+<h2 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h2><p><a href="https://fed.taobao.org/blog/2016/04/26/performance-composite/" target="_blank" rel="noopener">https://fed.taobao.org/blog/2016/04/26/performance-composite/</a></p>
+<p><a href="https://www.html5rocks.com/zh/tutorials/speed/layers/" target="_blank" rel="noopener">https://www.html5rocks.com/zh/tutorials/speed/layers/</a></p>
+<p><a href="https://www.html5rocks.com/zh/tutorials/internals/howbrowserswork/#Global_and_Incremental" target="_blank" rel="noopener">https://www.html5rocks.com/zh/tutorials/internals/howbrowserswork/#Global_and_Incremental</a></p>
+<p><a href="https://segmentfault.com/a/1190000014520786" target="_blank" rel="noopener">https://segmentfault.com/a/1190000014520786</a></p>
+<p><a href="https://div.io/topic/1348" target="_blank" rel="noopener">https://div.io/topic/1348</a></p>
+<p><a href="https://developers.google.com/web/fundamentals/performance/rendering/stick-to-compositor-only-properties-and-manage-layer-count" target="_blank" rel="noopener">https://developers.google.com/web/fundamentals/performance/rendering/stick-to-compositor-only-properties-and-manage-layer-count</a></p>
+
+  </div>
+</article>
+
+
+
+    </div>
+    
+      <div id="footer-post-container">
+  <div id="footer-post">
+
+    <div id="nav-footer" style="display: none">
+      <ul>
+         
+          <li><a href="/">Home</a></li>
+         
+          <li><a href="/about/index.html">About</a></li>
+         
+          <li><a href="/archives/">Writing</a></li>
+         
+          <li><a href="http://github.com/gabithume" target="_blank" rel="noopener">Travel</a></li>
+        
+      </ul>
+    </div>
+
+    <div id="toc-footer" style="display: none">
+      <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#浏览器的主要结构"><span class="toc-number">1.</span> <span class="toc-text">浏览器的主要结构</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#呈现引擎"><span class="toc-number">2.</span> <span class="toc-text">呈现引擎</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Compsite"><span class="toc-number">3.</span> <span class="toc-text">Compsite</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#RenderLayer-gt-GraphicsLayer，合成层的创建标准"><span class="toc-number">4.</span> <span class="toc-text">RenderLayer -&gt; GraphicsLayer，合成层的创建标准</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#合成层的性能优化"><span class="toc-number">5.</span> <span class="toc-text">合成层的性能优化</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#提升动画效果的元素"><span class="toc-number">5.0.1.</span> <span class="toc-text">提升动画效果的元素</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#使用-transform-或者-opacity-来实现动画效果"><span class="toc-number">5.0.2.</span> <span class="toc-text">使用 transform 或者 opacity 来实现动画效果</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#减少绘制区域"><span class="toc-number">5.0.3.</span> <span class="toc-text">减少绘制区域</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#如何查看合成层"><span class="toc-number">6.</span> <span class="toc-text">如何查看合成层</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#合成层可能会遇到的问题"><span class="toc-number">7.</span> <span class="toc-text">合成层可能会遇到的问题</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#参考资料"><span class="toc-number">8.</span> <span class="toc-text">参考资料</span></a></li></ol>
+    </div>
+
+    <div id="share-footer" style="display: none">
+      <ul>
+  <li><a class="icon" href="http://www.facebook.com/sharer.php?u=http://yoursite.com/2019/08/22/2019/%E6%B5%8F%E8%A7%88%E5%99%A8%E7%9A%84%E6%B8%B2%E6%9F%93%E8%BF%87%E7%A8%8B2.0/" target="_blank" rel="noopener"><i class="fa fa-facebook fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://twitter.com/share?url=http://yoursite.com/2019/08/22/2019/%E6%B5%8F%E8%A7%88%E5%99%A8%E7%9A%84%E6%B8%B2%E6%9F%93%E8%BF%87%E7%A8%8B2.0/&text=浏览器的渲染过程2.0 — Composite" target="_blank" rel="noopener"><i class="fa fa-twitter fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.linkedin.com/shareArticle?url=http://yoursite.com/2019/08/22/2019/%E6%B5%8F%E8%A7%88%E5%99%A8%E7%9A%84%E6%B8%B2%E6%9F%93%E8%BF%87%E7%A8%8B2.0/&title=浏览器的渲染过程2.0 — Composite" target="_blank" rel="noopener"><i class="fa fa-linkedin fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://pinterest.com/pin/create/bookmarklet/?url=http://yoursite.com/2019/08/22/2019/%E6%B5%8F%E8%A7%88%E5%99%A8%E7%9A%84%E6%B8%B2%E6%9F%93%E8%BF%87%E7%A8%8B2.0/&is_video=false&description=浏览器的渲染过程2.0 — Composite" target="_blank" rel="noopener"><i class="fa fa-pinterest fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=浏览器的渲染过程2.0 — Composite&body=Check out this article: http://yoursite.com/2019/08/22/2019/%E6%B5%8F%E8%A7%88%E5%99%A8%E7%9A%84%E6%B8%B2%E6%9F%93%E8%BF%87%E7%A8%8B2.0/"><i class="fa fa-envelope fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://getpocket.com/save?url=http://yoursite.com/2019/08/22/2019/%E6%B5%8F%E8%A7%88%E5%99%A8%E7%9A%84%E6%B8%B2%E6%9F%93%E8%BF%87%E7%A8%8B2.0/&title=浏览器的渲染过程2.0 — Composite" target="_blank" rel="noopener"><i class="fa fa-get-pocket fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://reddit.com/submit?url=http://yoursite.com/2019/08/22/2019/%E6%B5%8F%E8%A7%88%E5%99%A8%E7%9A%84%E6%B8%B2%E6%9F%93%E8%BF%87%E7%A8%8B2.0/&title=浏览器的渲染过程2.0 — Composite" target="_blank" rel="noopener"><i class="fa fa-reddit fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.stumbleupon.com/submit?url=http://yoursite.com/2019/08/22/2019/%E6%B5%8F%E8%A7%88%E5%99%A8%E7%9A%84%E6%B8%B2%E6%9F%93%E8%BF%87%E7%A8%8B2.0/&title=浏览器的渲染过程2.0 — Composite" target="_blank" rel="noopener"><i class="fa fa-stumbleupon fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://digg.com/submit?url=http://yoursite.com/2019/08/22/2019/%E6%B5%8F%E8%A7%88%E5%99%A8%E7%9A%84%E6%B8%B2%E6%9F%93%E8%BF%87%E7%A8%8B2.0/&title=浏览器的渲染过程2.0 — Composite" target="_blank" rel="noopener"><i class="fa fa-digg fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.tumblr.com/share/link?url=http://yoursite.com/2019/08/22/2019/%E6%B5%8F%E8%A7%88%E5%99%A8%E7%9A%84%E6%B8%B2%E6%9F%93%E8%BF%87%E7%A8%8B2.0/&name=浏览器的渲染过程2.0 — Composite&description=" target="_blank" rel="noopener"><i class="fa fa-tumblr fa-lg" aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+
+    <div id="actions-footer">
+      <ul>
+        <li id="toc"><a class="icon" href="#" onclick='$("#toc-footer").toggle();return false;'><i class="fa fa-list fa-lg" aria-hidden="true"></i> TOC</a></li>
+        <li id="share"><a class="icon" href="#" onclick='$("#share-footer").toggle();return false;'><i class="fa fa-share-alt fa-lg" aria-hidden="true"></i> Share</a></li>
+        <li id="top" style="display:none"><a class="icon" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fa fa-chevron-up fa-lg" aria-hidden="true"></i> Top</a></li>
+        <li id="menu"><a class="icon" href="#" onclick='$("#nav-footer").toggle();return false;'><i class="fa fa-bars fa-lg" aria-hidden="true"></i> Menu</a></li>
+      </ul>
+    </div>
+
+  </div>
+</div>
+
+    
+    <footer id="footer">
+  <div class="footer-left">
+    
+    <h1 class="footer-title" itemprop="name headline">
+        浏览器的渲染过程2.0 — Composite
+    </h1>
+
+
+ &copy; 2019 zhaoyi
+  </div>
+  <div class="footer-right">
+    <nav>
+      <ul>
+         
+          <li><a href="/">Home</a></li>
+         
+          <li><a href="/about/index.html">About</a></li>
+         
+          <li><a href="/archives/">Writing</a></li>
+         
+          <li><a href="http://github.com/gabithume" target="_blank" rel="noopener">Travel</a></li>
+        
+      </ul>
+    </nav>
+  </div>
+</footer> 
+
+</body>
+</html>
+<!-- styles -->
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
+<link rel="stylesheet" href="/lib/meslo-LG/styles.css">
+<link rel="stylesheet" href="/lib/justified-gallery/justifiedGallery.min.css">
+
+
+<!-- jquery -->
+<script src="/lib/jquery/jquery.min.js"></script>
+<script src="/lib/justified-gallery/jquery.justifiedGallery.min.js"></script>
+<script src="/js/main.js"></script>
+<!-- Google Analytics -->
+
+    <script type="text/javascript">
+        (function(i,s,o,g,r,a,m) {i['GoogleAnalyticsObject']=r;i[r]=i[r]||function() {
+        (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+        m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+        })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+        ga('create', 'UA-86660611-1', 'auto');
+        ga('send', 'pageview');
+    </script>
+
+<!-- Disqus Comments -->
+
+
