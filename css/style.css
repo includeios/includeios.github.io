@@ -579,6 +579,33 @@ body {
   -webkit-filter: grayscale(100%);
   filter: grayscale(100%);
 }
+#header #search-content {
+  position: absolute;
+  top: 74px;
+  right: 20px;
+}
+#header #search-content #search-input {
+  height: 32px;
+  width: 240px;
+  border: none;
+  border-radius: 4px;
+  box-shadow: none;
+  background: #efefef;
+  font-size: 14px;
+  padding-left: 8px;
+  color: #363533;
+}
+#header #search-content #search-icon {
+  width: 24px;
+  height: 24px;
+  vertical-align: middle;
+  position: relative;
+  top: -3px;
+  padding: 5px;
+  box-sizing: content-box;
+  left: -5px;
+  cursor: pointer;
+}
 #header #nav {
   letter-spacing: 0.01em;
   font-size: 0.8rem;
@@ -1144,6 +1171,143 @@ article .content .pullquote.right {
   margin-left: 1em;
 }
 article .content .caption {
+  color: color-grey;
+  display: block;
+  font-size: 0.9em;
+  margin-top: 0.5em;
+  position: relative;
+  text-align: center;
+}
+.posttitle {
+  text-transform: none;
+  font-size: 1.5em;
+  line-height: 1.25;
+}
+.article-tag .tag-link:before {
+  content: "#";
+}
+@media (min-width: 480px) {
+  .article-tag {
+    display: inline;
+  }
+  .article-tag:before {
+    content: "|";
+  }
+}
+search header .posttitle {
+  margin-top: 0;
+  margin-bottom: 0;
+  text-transform: none;
+  font-size: 1.5em;
+  line-height: 1.25;
+}
+search header .meta {
+  margin-top: 0;
+  margin-bottom: 1rem;
+}
+search header .meta * {
+  color: #333;
+  font-size: 0.85rem;
+}
+search header .author {
+  text-transform: uppercase;
+  letter-spacing: 0.01em;
+  font-weight: 700;
+}
+search header .postdate {
+  display: inline;
+}
+search .content .question {
+  color: #ab2251;
+  padding: 8px;
+  font-size: 13px;
+  line-height: 18px;
+  border: 1px dotted;
+  border-radius: 4px;
+}
+search .content h2:before {
+  content: "#";
+  color: #d44375;
+  position: absolute;
+  left: -1rem;
+  top: -4px;
+  font-size: 1.2rem;
+  font-weight: bold;
+}
+search .content img,
+search .content video {
+  max-width: 100%;
+  height: auto;
+  display: block;
+  margin: auto;
+}
+search .content .video-container {
+  position: relative;
+  padding-top: 56.25%;
+  height: 0;
+  overflow: hidden;
+}
+search .content .video-container iframe,
+search .content .video-container object,
+search .content .video-container embed {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  margin-top: 0;
+}
+search .content blockquote {
+  background: inherit;
+  color: #ab2251;
+  border-left: 0px solid #ab2251;
+  margin: 0px 10px 10px 10px;
+  padding: 0.5em 10px;
+  quotes: "\201C" "\201D" "\2018" "\2019";
+  font-weight: bold;
+}
+search .content blockquote:before {
+  margin-right: 0.25em;
+  color: #ab2251;
+  content: "\201C";
+  vertical-align: -0.4em;
+  font-size: 2em;
+  line-height: 0.1em;
+}
+search .content blockquote p {
+  margin: 0;
+}
+search .content blockquote footer {
+  color: #666;
+  font-size: 11px;
+  margin: line-height 0;
+}
+search .content blockquote footer a {
+  color: #666;
+  background-image: linear-gradient(transparent, transparent 5px, #666 5px, #666);
+}
+search .content blockquote footer a:hover {
+  color: #999;
+  background-image: linear-gradient(transparent, transparent 4px, #999 4px, #999);
+}
+search .content blockquote footer cite:before {
+  content: "—";
+  padding: 0 0.5em;
+}
+search .content .pullquote {
+  text-align: left;
+  width: 45%;
+  margin: 0;
+}
+search .content .pullquote.left {
+  margin-left: 0.5em;
+  margin-right: 1em;
+}
+search .content .pullquote.right {
+  margin-right: 0.5em;
+  margin-left: 1em;
+}
+search .content .caption {
   color: color-grey;
   display: block;
   font-size: 0.9em;
