@@ -582,7 +582,7 @@ body {
 #header #search-content {
   position: absolute;
   top: 74px;
-  right: 20px;
+  right: 120px;
 }
 #header #search-content #search-input {
   height: 32px;
