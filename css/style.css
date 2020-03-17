@@ -650,6 +650,9 @@ body {
   filter: none;
 }
 @media screen and (max-width: 480px) {
+  #search-content {
+    display: none;
+  }
   #header #title {
     padding-top: 9px;
     padding-bottom: 9px;
