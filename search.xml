@@ -4,6 +4,25 @@
   
     
     <entry>
+      <title>基于Hexo快速搭建个人博客(二) -- 部署篇</title>
+      <link href="/2020/03/17/2020/%E5%9F%BA%E4%BA%8EHexo%E5%BF%AB%E9%80%9F%E6%90%AD%E5%BB%BA%E4%B8%AA%E4%BA%BA%E5%8D%9A%E5%AE%A22/"/>
+      <url>/2020/03/17/2020/%E5%9F%BA%E4%BA%8EHexo%E5%BF%AB%E9%80%9F%E6%90%AD%E5%BB%BA%E4%B8%AA%E4%BA%BA%E5%8D%9A%E5%AE%A22/</url>
+      
+        <content type="html"><![CDATA[<p>上一篇里，你已经能在你的本地跑起一个localhost的项目了，那么，怎么让你的项目别人也能访问到呢，如何绑定自定义域名以及让各大搜索引擎能搜索到自己的博客呢？</p><h2 id="github-pages-coding-pages"><a href="#github-pages-coding-pages" class="headerlink" title="github pages / coding pages"></a>github pages / coding pages</h2><blockquote><p> 感谢这些免费且便捷的托管工具</p></blockquote><ol><li>首先，我们在github上新建一个项目，用来存储我们的博客代码：</li></ol><p><img src="/images/2020/image-20200317181846915.png" alt="image-20200317181846915"></p><ol start="2"><li>接下来在项目的_config.yml文件里，把我们新创建的项目地址配置好，这样后面运行hexo的命令行时就可以自动的把我们本地代码推到托管平台上了：</li></ol><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span></pre></td><td class="code"><pre><span class="line">deploy:</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">2</span></pre></td><td class="code"><pre><span class="line">  type: &#39;git&#39;</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">3</span></pre></td><td class="code"><pre><span class="line">  repository:</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">4</span></pre></td><td class="code"><pre><span class="line">    github: &#39;https:&#x2F;&#x2F;github.com&#x2F;includeios&#x2F;includeios.github.io.git&#39;</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">5</span></pre></td><td class="code"><pre><span class="line">    coding: &#39;git@e.coding.net:atangge_tripod&#x2F;atangge_tripod.git&#39;</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">6</span></pre></td><td class="code"><pre><span class="line">  branch: master</span></pre></td></tr></table></figure><p>这里我分别配置了github和coding</p><ol start="3"><li>生成静态资源和推送网站</li></ol><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span></pre></td><td class="code"><pre><span class="line">hexo clean </span></pre></td></tr><tr><td class="gutter"><pre><span class="line">2</span></pre></td><td class="code"><pre><span class="line">hexo g </span></pre></td></tr><tr><td class="gutter"><pre><span class="line">3</span></pre></td><td class="code"><pre><span class="line">hexo d</span></pre></td></tr></table></figure><ol start="4"><li><p>在项目里开启github page选项</p><p><img src="/images/2020/image-20200317182450897.png" alt="image-20200317182450897"></p><p>往下滚，找到Github Pages选项，将Source改为master branch，最后点击Save按钮</p></li></ol><p><img src="/images/2020/image-20200317182639804.png" alt="image-20200317182639804"></p><p>Ok，此刻你在地址栏里输入：<a href="http://username.github.io（username是你github的名字），就能看到你的博客页面拉。" target="_blank" rel="noopener">http://username.github.io（username是你github的名字），就能看到你的博客页面拉。</a></p><p>coding上的部署和github类似，不同的是他会生成一个随机字符作为你静态页面的访问地址，不过比起github，国内网访问coding的静态网站会更快点。</p><h2 id="绑定自定义域名"><a href="#绑定自定义域名" class="headerlink" title="绑定自定义域名"></a>绑定自定义域名</h2><p>假设你已经花了几百大洋拥有一个属于自己的域名，还没有买的小伙伴可以去腾讯云或者阿里云上买一个。</p><p>阿里云购买传送桶：<a href="https://wanwang.aliyun.com/domain/" target="_blank" rel="noopener">https://wanwang.aliyun.com/domain/</a></p><blockquote><p>这个文章的域名 tripod.fun 提取关键字<strong>阿汤哥的鼎</strong>中的<strong>鼎</strong>！！！翻译来的….</p><p>199，10年，199，你买不来吃亏，买不了上当</p></blockquote><p>接下来在你的控制台输入</p><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span></pre></td><td class="code"><pre><span class="line">ping username.github.io（github上你的域名&#x2F;coding上你的域名）</span></pre></td></tr></table></figure><p>就能看到你的网站的ip地址了：</p><p><img src="/images/2020/image-20200317224700951.png" alt="image-20200317224700951"></p><p>接下来我们回到购买域名的平台中心，在域名解析里面添加上我们刚刚得到的ip地址</p><p><img src="/images/2020/image-20200317224940477.png" alt="image-20200317224940477"></p><p>接下来返回github page，在Custom domain里面添加上透露着金钱味道的域名就好啦~</p><p><img src="/images/2020/image-20200317225211367.png" alt="image-20200317225211367"></p><h2 id="在各大搜索引擎里添加站点"><a href="#在各大搜索引擎里添加站点" class="headerlink" title="在各大搜索引擎里添加站点"></a>在各大搜索引擎里添加站点</h2><p>直接在百度里面搜索我们新绑定的域名，他会提醒你要不要收录这个地址</p><p><img src="/images/2020/image-20200317225448788.png" alt="image-20200317225448788"></p><p>点击链接提交完后，这个网址百度就会记录啦</p><p>不过我们博客一般不会只有这一条链接，像我的博客<a href="http://www.tripod.fun/，每篇文章都会有属于自己的url地址，如果没写一篇文章都要手动添加一下岂不是很麻烦。" target="_blank" rel="noopener">http://www.tripod.fun/，每篇文章都会有属于自己的url地址，如果没写一篇文章都要手动添加一下岂不是很麻烦。</a></p><p>百度提供了认证主站后，后面的子站都可以自动收录的功能，有三种方法，这里推荐用文件验证：</p><p><img src="/images/2020/image-20200317225917043.png" alt="image-20200317225917043"></p><p>按照提示下载好文件，放到source下面，重新运行一下构建命令行，就能看到构建好的代码根目录下有对应的html文件：</p><p><img src="/images/2020/image-20200317230554497.png" alt="image-20200317230554497"></p><p>google与百度同理，</p><p>google的站点管理页面传送桶：<a href="https://search.google.com/search-console/links?resource_id=https%3A%2F%2Fincludeios.github.io%2F&amp;hl=zh-CN" target="_blank" rel="noopener">https://search.google.com/search-console/links?resource_id=https%3A%2F%2Fincludeios.github.io%2F&amp;hl=zh-CN</a></p><p>欧卡！push完代码后，再过几天让两大搜索引擎的爬虫亲密光顾你的博客内容一阵子，你就能在搜索引擎上搜索到你自己啦</p><p><img src="/images/2020/image-20200317230738177.png" alt="image-20200317230738177"></p><p>从此以后，爷也是在江湖上留下过脚印的人…</p>]]></content>
+      
+      
+      
+        <tags>
+            
+            <tag> js </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    
+    
+    <entry>
       <title>基于Hexo快速搭建个人博客(一) -- 项目篇</title>
       <link href="/2020/01/28/2020/%E5%9F%BA%E4%BA%8EHexo%E5%BF%AB%E9%80%9F%E6%90%AD%E5%BB%BA%E4%B8%AA%E4%BA%BA%E5%8D%9A%E5%AE%A21/"/>
       <url>/2020/01/28/2020/%E5%9F%BA%E4%BA%8EHexo%E5%BF%AB%E9%80%9F%E6%90%AD%E5%BB%BA%E4%B8%AA%E4%BA%BA%E5%8D%9A%E5%AE%A21/</url>
@@ -116,25 +135,6 @@
     
     
     <entry>
-      <title>liunx查询日志常用命令收集</title>
-      <link href="/2019/09/17/2019/liunx%E6%9F%A5%E8%AF%A2%E6%97%A5%E5%BF%97%E5%B8%B8%E7%94%A8%E5%91%BD%E4%BB%A4%E6%94%B6%E9%9B%86/"/>
-      <url>/2019/09/17/2019/liunx%E6%9F%A5%E8%AF%A2%E6%97%A5%E5%BF%97%E5%B8%B8%E7%94%A8%E5%91%BD%E4%BB%A4%E6%94%B6%E9%9B%86/</url>
-      
-        <content type="html"><![CDATA[<p>每次查日志很多命令都记不熟，在这里做个整理吧</p><h3 id="是否有新增记录-tail"><a href="#是否有新增记录-tail" class="headerlink" title="是否有新增记录  tail"></a>是否有新增记录  tail</h3><ul><li><strong>tail -400f demo.log</strong><br>  #demo.log后400行日志 </li></ul><h3 id="关键记录查找-grep"><a href="#关键记录查找-grep" class="headerlink" title="关键记录查找 grep"></a>关键记录查找 grep</h3><ul><li><p>*<em>grep ‘5033’ demo.log *</em><br>  #查找demo.log下所有匹配’5033’的行 </p></li><li><p><strong>grep -o ‘order-fix.curr_id:([0-9]+)‘ demo.log</strong><br>   #查找并提取（不是一行）匹配正则表达式的内容 </p></li><li><p><strong>grep -c  ‘ERROR’ demo.log</strong><br>   #输出所有包含‘ERROR’的行的数量 </p></li><li><p><strong>grep -v ‘ERROR’ demo.log</strong><br>  #输出所有不包含‘ERROR’的行 </p></li><li><p>或操作：包含123或者abc的行 </p><p> <strong>grep -E ‘123|abc’ demo.log</strong></p></li><li><p>与操作：既包含123并且包含abc的行 </p><p> <strong>grep ‘123’ demo.log | grep ‘abc’</strong></p></li></ul>]]></content>
-      
-      
-      
-        <tags>
-            
-            <tag> liunx </tag>
-            
-        </tags>
-      
-    </entry>
-    
-    
-    
-    <entry>
       <title>如何优雅的进行版本回退</title>
       <link href="/2019/09/17/2019/%E5%A6%82%E4%BD%95%E4%BC%98%E9%9B%85%E7%9A%84%E8%BF%9B%E8%A1%8C%E7%89%88%E6%9C%AC%E5%9B%9E%E9%80%80/"/>
       <url>/2019/09/17/2019/%E5%A6%82%E4%BD%95%E4%BC%98%E9%9B%85%E7%9A%84%E8%BF%9B%E8%A1%8C%E7%89%88%E6%9C%AC%E5%9B%9E%E9%80%80/</url>
@@ -146,6 +146,25 @@
         <tags>
             
             <tag> git </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    
+    
+    <entry>
+      <title>liunx查询日志常用命令收集</title>
+      <link href="/2019/09/17/2019/liunx%E6%9F%A5%E8%AF%A2%E6%97%A5%E5%BF%97%E5%B8%B8%E7%94%A8%E5%91%BD%E4%BB%A4%E6%94%B6%E9%9B%86/"/>
+      <url>/2019/09/17/2019/liunx%E6%9F%A5%E8%AF%A2%E6%97%A5%E5%BF%97%E5%B8%B8%E7%94%A8%E5%91%BD%E4%BB%A4%E6%94%B6%E9%9B%86/</url>
+      
+        <content type="html"><![CDATA[<p>每次查日志很多命令都记不熟，在这里做个整理吧</p><h3 id="是否有新增记录-tail"><a href="#是否有新增记录-tail" class="headerlink" title="是否有新增记录  tail"></a>是否有新增记录  tail</h3><ul><li><strong>tail -400f demo.log</strong><br>  #demo.log后400行日志 </li></ul><h3 id="关键记录查找-grep"><a href="#关键记录查找-grep" class="headerlink" title="关键记录查找 grep"></a>关键记录查找 grep</h3><ul><li><p>*<em>grep ‘5033’ demo.log *</em><br>  #查找demo.log下所有匹配’5033’的行 </p></li><li><p><strong>grep -o ‘order-fix.curr_id:([0-9]+)‘ demo.log</strong><br>   #查找并提取（不是一行）匹配正则表达式的内容 </p></li><li><p><strong>grep -c  ‘ERROR’ demo.log</strong><br>   #输出所有包含‘ERROR’的行的数量 </p></li><li><p><strong>grep -v ‘ERROR’ demo.log</strong><br>  #输出所有不包含‘ERROR’的行 </p></li><li><p>或操作：包含123或者abc的行 </p><p> <strong>grep -E ‘123|abc’ demo.log</strong></p></li><li><p>与操作：既包含123并且包含abc的行 </p><p> <strong>grep ‘123’ demo.log | grep ‘abc’</strong></p></li></ul>]]></content>
+      
+      
+      
+        <tags>
+            
+            <tag> liunx </tag>
             
         </tags>
       
