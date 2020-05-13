@@ -22,7 +22,7 @@
 <meta property="og:image" content="http:&#x2F;&#x2F;yoursite.com&#x2F;images&#x2F;2020&#x2F;v8&#x2F;image-20200422104609594.png">
 <meta property="og:image" content="http:&#x2F;&#x2F;yoursite.com&#x2F;images&#x2F;2020&#x2F;v8&#x2F;image-20200412220737458.png">
 <meta property="og:image" content="http:&#x2F;&#x2F;yoursite.com&#x2F;images&#x2F;2020&#x2F;v8&#x2F;image-20200412220756620.png">
-<meta property="og:updated_time" content="2020-04-26T08:43:23.560Z">
+<meta property="og:updated_time" content="2020-05-13T03:43:41.732Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:image" content="http:&#x2F;&#x2F;yoursite.com&#x2F;images&#x2F;2020&#x2F;v8&#x2F;image-20200421183723593.png">
     
@@ -146,7 +146,7 @@
     <p>先从一个简单的例子看起，我们在控制台输入下面这段代码并执行</p>
 <figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">Foo</span>(<span class="params"></span>)</span>&#123;</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">2</span></pre></td><td class="code"><pre><span class="line">  <span class="keyword">return</span> &#123;</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">3</span></pre></td><td class="code"><pre><span class="line">    <span class="string">'c'</span>:<span class="string">'c'</span>,</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">4</span></pre></td><td class="code"><pre><span class="line">    <span class="string">'d'</span>:<span class="string">'d'</span>,</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">5</span></pre></td><td class="code"><pre><span class="line">    <span class="string">'b'</span>:<span class="string">'b'</span>,</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">6</span></pre></td><td class="code"><pre><span class="line">    <span class="number">2</span>:<span class="number">2</span>,</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">7</span></pre></td><td class="code"><pre><span class="line">    <span class="number">1</span>:<span class="number">1</span>,</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">8</span></pre></td><td class="code"><pre><span class="line">    <span class="string">'a'</span>:<span class="string">'a'</span>,</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">9</span></pre></td><td class="code"><pre><span class="line">    <span class="number">3</span>:<span class="number">3</span></span></pre></td></tr><tr><td class="gutter"><pre><span class="line">10</span></pre></td><td class="code"><pre><span class="line">  &#125;</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">11</span></pre></td><td class="code"><pre><span class="line">&#125;</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">12</span></pre></td><td class="code"><pre><span class="line"></span></pre></td></tr><tr><td class="gutter"><pre><span class="line">13</span></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> foo = <span class="keyword">new</span> Foo()</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">14</span></pre></td><td class="code"><pre><span class="line"><span class="built_in">Object</span>.keys(foo)</span></pre></td></tr><tr><td class="gutter"><pre><span class="line">15</span></pre></td><td class="code"><pre><span class="line"></span></pre></td></tr><tr><td class="gutter"><pre><span class="line">16</span></pre></td><td class="code"><pre><span class="line"><span class="comment">//结果</span></span></pre></td></tr><tr><td class="gutter"><pre><span class="line">17</span></pre></td><td class="code"><pre><span class="line">[<span class="string">"1"</span>, <span class="string">"2"</span>, <span class="string">"3"</span>, <span class="string">"c"</span>, <span class="string">"d"</span>, <span class="string">"b"</span>, <span class="string">"a"</span>]</span></pre></td></tr></table></figure>
 
-<h2 id="Element-Property"><a href="#Element-Property" class="headerlink" title="Element, Property"></a>Element, Property</h2><p>可以看出来属性的遍历结果和我们定义对象时设置的顺序并不一样：我们是乱序设置属性的，但打印的结果却十分的有规律，事实上这是<a href="https://tc39.es/ecma262/#sec-ordinaryownpropertykeys" target="_blank" rel="noopener">ECMA规范</a>制定的结果，总结起来如下：</p>
+<h2 id="Element-Property"><a href="#Element-Property" class="headerlink" title="Element, Property"></a>Element, Property</h2><p>可以看出来属性的遍历结果和我们定义对象时设置的顺序并不一样：我们是乱序设置属性的，但打印的结果却十分的有规律，事实上这是 <a href="https://tc39.es/ecma262/#sec-ordinaryownpropertykeys" target="_blank" rel="noopener">ECMA规范</a> 制定的结果，总结起来如下：</p>
 <ul>
 <li>先打印出数字这种索引类型的属性，再打印出字符串这种常规类型的属性</li>
 <li>索引类型的属性（下文称为索引属性）按照索引值从小到大的顺序打印出来</li>
@@ -161,8 +161,8 @@
 <p><img src="/images/2020/v8/image-20200426145348796.png" alt="image-20200426145348796"></p>
 <p>在上面这段代码里，我们给对象a设置了3个常规属性property0，property1，property2，给对象b设置了3个常规属性property0，property1，property2和3个索引属性element0，element1，element2。</p>
 <p>在快照里能很明显看出，b的索引属性被放在elements下面。此外细心的小伙伴可以看出，这两个对象的结构描述Map（Hidden Class）是一样的（框框圈出的部分），但是明明a，b的name属性不一样，且对象b比对象a多出了3个索引属性，他们的描述结构怎么会是一样呢？</p>
-<h2 id="Hidden-Class"><a href="#Hidden-Class" class="headerlink" title="Hidden Class"></a>Hidden Class</h2><p>我们都知道，像 Java 这样的静态语言，类型一但创建便不可更改，属性可以通过固定的偏移量进行访问。相比之下，JavaScript是一个动态类型的语言，对象创建之后可以在运行时改变类型，添加或删除属性，这意味着属性的类型和内存偏移量只有在运行时才能确定。</p>
-<p>为了解决动态查找属性的问题，JavaScript中引入了Hidden Class（隐藏类，在V8中被称作Map）的概念：每当一个属性的值发生改变时，我们就会重新计算这个属性的内存偏移量并把他记录在Hidden Class里。</p>
+<h2 id="Hidden-Class"><a href="#Hidden-Class" class="headerlink" title="Hidden Class"></a>Hidden Class</h2><p>我们都知道，像 Java 这样的静态语言，类型一但创建便不可更改，属性可以通过固定的偏移量进行访问。相比之下，JavaScript 是一个动态类型的语言，对象创建之后可以在运行时改变类型，添加或删除属性，这意味着属性的类型和内存偏移量只有在运行时才能确定。</p>
+<p>为了解决动态查找属性的问题，JavaScript 中引入了 Hidden Class（隐藏类，在V8中被称作Map）的概念：每当一个属性的值发生改变时，我们就会重新计算这个属性的内存偏移量并把他记录在 Hidden Class 里。</p>
 <p>先说明几个隐藏类的特性：</p>
 <ul>
 <li>每个对象都拥有自己的隐藏类</li>
@@ -179,7 +179,7 @@
 <figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span></pre></td><td class="code"><pre><span class="line">hiddenClass.a = <span class="string">'a'</span></span></pre></td></tr></table></figure>
 
 <p><img src="/images/2020/v8/image-20200422154848924.png" alt="image-20200422154848924"></p>
-<p>hiddenClass有了一个新的隐藏类Map @621015，同时他的back_pointer指针指向上一个隐藏类Map @621063。</p>
+<p>hiddenClass有了一个新的隐藏类Map @621537，同时他的back_pointer指针指向上一个隐藏类Map @621063。</p>
 <h3 id="特性4：相同隐藏类"><a href="#特性4：相同隐藏类" class="headerlink" title="特性4：相同隐藏类"></a>特性4：相同隐藏类</h3><p>还记得前面遗留的问题嘛：两个不同的对象，拥有不同的属性但是却拥有相同的Hidden Class。</p>
 <p>首先要明确一点的是，每个对象都有自己的elements属性，指向element对象，默认情况下这个对象是线性存储数据的，对于a和b这两个对象来说，他们的elements对象的类型是一样的。那自然Hidden Class不需要单独对element做特殊记录。</p>
 <p>当然，如果element的存储结构发生改变，Hidden Class自然也会发生改变。执行下面代码：</p>
